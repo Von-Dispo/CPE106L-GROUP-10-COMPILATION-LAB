@@ -1,0 +1,63 @@
+import unittest
+import tkinter as tk
+import oxo_logic
+import main
+
+class TicTacToeTest(unittest.TestCase):
+    def setUp(self):
+        self.root = tk.Tk()
+        self.app = main
+        self.app.buildMenu(self.root)
+        self.board = self.app.buildBoard(self.root)
+
+    def tearDown(self):
+        self.root.destroy()
+
+    def test_new_game(self):
+        self.app.evNew()
+        game_state = self.app.cells2game()
+        expected_state = [" "] * 9
+        self.assertEqual(game_state, expected_state)
+        self.assertEqual(self.app.status['text'], "Playing game")
+
+    def test_user_move(self):
+        game_state = ["X", "O", " ", " ", " ", " ", " ", " ", " "]
+        self.app.game2cells(game_state)
+
+        self.app.evClick(0, 2)  # User moves to an empty cell
+        updated_state = self.app.cells2game()
+        expected_state = ["X", "O", "X", " ", " ", " ", " ", " ", " "]
+        self.assertEqual(updated_state, expected_state)
+
+        self.app.evClick(0, 1)  # User tries to move to an occupied cell
+        updated_state = self.app.cells2game()
+        self.assertEqual(updated_state, expected_state)  # State should remain the same
+
+    def test_computer_move(self):
+        game_state = ["X", "O", "X", "O", "X", "O", "X", " ", " "]
+        self.app.game2cells(game_state)
+
+        self.app.evClick(2, 1)  # User tries to move when game is over
+        self.assertEqual(self.app.status['text'], "Game over")
+
+        self.app.evResume()  # Resuming the game
+        updated_state = self.app.cells2game()
+        expected_state = ["X", "O", "X", "O", "X", "O", "X", "O", " "]
+        self.assertEqual(updated_state, expected_state)
+
+    def test_save_and_restore_game(self):
+        game_state = ["X", "O", "X", " ", " ", " ", " ", " ", " "]
+        self.app.game2cells(game_state)
+
+        self.app.evSave()  # Save the game state
+        self.app.evNew()  # Start a new game
+        new_game_state = self.app.cells2game()
+        new_expected_state = [" "] * 9
+        self.assertEqual(new_game_state, new_expected_state)
+
+        self.app.evResume()  # Restore the saved game
+        restored_state = self.app.cells2game()
+        self.assertEqual(restored_state, game_state)
+
+if __name__ == '__main__':
+    unittest.main()
